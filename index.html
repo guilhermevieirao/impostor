@@ -5,7 +5,526 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jogo do Impostor</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tela {
+            display: none;
+            width: 100%;
+        }
+
+        .tela.ativa {
+            display: block;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(102, 126, 234, 0.1);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        /* Seção de Jogadores */
+        .jogadores-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Botões */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-grande {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+
+        .btn-iniciar {
+            width: 100%;
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 1.1rem;
+        }
+
+        /* Lista de Jogadores */
+        .lista-jogadores {
+            margin-bottom: 20px;
+        }
+
+        .jogadores-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .jogador-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            animation: slideInLeft 0.3s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .jogador-item:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .jogador-nome {
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+        }
+
+        .jogador-acoes {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-pequeno {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-mover {
+            background: #bee3f8;
+            color: #2c5aa0;
+            font-weight: bold;
+        }
+
+        .btn-mover:hover {
+            background: #90cdf4;
+        }
+
+        .btn-deletar {
+            background: #fed7d7;
+            color: #c53030;
+            font-weight: bold;
+        }
+
+        .btn-deletar:hover {
+            background: #fc8181;
+        }
+
+        .msg-vazia {
+            text-align: center;
+            color: #a0aec0;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        /* Tela de Funções */
+        .funcoes-card {
+            text-align: center;
+        }
+
+        .jogador-info {
+            margin-bottom: 40px;
+        }
+
+        #nome-atual {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .numero-jogador {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .area-funcao {
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-resultado {
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .funcao-resultado {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .funcao-resultado.impostor {
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .funcao-resultado.inocente {
+            color: #48bb78;
+        }
+
+        .palavra-resultado {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: bold;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .palavra-resultado.oculta {
+            color: #cbd5e0;
+            font-style: italic;
+        }
+
+        /* Tela de Discussão */
+        .discussao-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .msg-discussao {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* Tela de Resultado */
+        .resultado-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .resultado-item {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .resultado-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .resultado-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .resultado-valor {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .resultado-valor.palavra {
+            color: #fff44f;
+            font-style: italic;
+        }
+
+        /* Responsivo para celulares */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 25px;
+            }
+
+            h2 {
+                font-size: 1.1rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .btn-iniciar {
+                padding: 12px;
+                font-size: 1rem;
+            }
+
+            .funcoes-card {
+                padding: 10px;
+            }
+
+            #nome-atual {
+                font-size: 1.5rem;
+            }
+
+            .info-resultado {
+                padding: 15px;
+                margin: 20px 0;
+            }
+
+            .funcao-resultado {
+                font-size: 1.2rem;
+            }
+
+            .palavra-resultado {
+                font-size: 1.1rem;
+            }
+
+            .resultado-card {
+                padding: 20px;
+            }
+
+            .resultado-valor {
+                font-size: 1.4rem;
+            }
+
+            body {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                border-radius: 15px;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+            }
+
+            h2 {
+                font-size: 1rem;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .btn-grande {
+                padding: 12px;
+                font-size: 1rem;
+            }
+
+            .jogador-item {
+                padding: 10px;
+                flex-wrap: wrap;
+            }
+
+            .jogador-nome {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+
+            .jogador-acoes {
+                width: 100%;
+                gap: 5px;
+            }
+
+            .btn-mover,
+            .btn-deletar {
+                flex: 1;
+                padding: 8px;
+            }
+
+            #nome-atual {
+                font-size: 1.3rem;
+            }
+
+            .info-resultado {
+                padding: 12px;
+                margin: 15px 0;
+            }
+
+            .funcao-resultado {
+                font-size: 1.1rem;
+            }
+
+            .palavra-resultado {
+                font-size: 1rem;
+            }
+
+            .resultado-valor {
+                font-size: 1.2rem;
+            }
+
+            .msg-discussao {
+                font-size: 1rem;
+                margin-bottom: 30px;
+            }
+        }
+
+        /* Animações */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+    </style>
 </head>
 
 <body>
