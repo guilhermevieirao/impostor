@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do Impostor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Tela 1: Gerenciamento de Jogadores -->
+    <div id="tela-jogadores" class="tela ativa">
+        <div class="container">
+            <h1>Jogo do Impostor</h1>
+
+            <div class="jogadores-section">
+                <h2>Adicionar Jogador</h2>
+                <div class="input-group">
+                    <input type="text" id="nome-jogador" placeholder="Digite o nome do jogador" autocomplete="off">
+                    <button id="btn-adicionar" class="btn btn-primary">Adicionar</button>
+                </div>
+            </div>
+
+            <div class="lista-jogadores">
+                <h2>Jogadores Registrados</h2>
+                <ul id="lista-jogadores" class="jogadores-list">
+                    <!-- Jogadores serão adicionados aqui -->
+                </ul>
+                <p id="msg-vazia" class="msg-vazia">Nenhum jogador adicionado ainda</p>
+            </div>
+
+            <button id="btn-iniciar" class="btn btn-success btn-iniciar" disabled>
+                Iniciar Partida
+            </button>
+        </div>
+    </div>
+
+    <!-- Tela 2: Visualização de Funções -->
+    <div id="tela-funcoes" class="tela">
+        <div class="container">
+            <div class="funcoes-card">
+                <div class="jogador-info">
+                    <h2 id="nome-atual">Jogador</h2>
+                    <p id="numero-jogador" class="numero-jogador">Jogador 1</p>
+                </div>
+
+                <div id="area-funcao" class="area-funcao">
+                    <button id="btn-visualizar" class="btn btn-primary btn-grande">
+                        Visualizar Função
+                    </button>
+                </div>
+
+                <div id="info-resultado" class="info-resultado" style="display: none;">
+                    <div id="funcao-resultado" class="funcao-resultado"></div>
+                    <div id="palavra-resultado" class="palavra-resultado"></div>
+                </div>
+
+                <button id="btn-proximo" class="btn btn-success" style="display: none;">
+                    Próximo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela 3: Discussão -->
+    <div id="tela-discussao" class="tela">
+        <div class="container discussao-container">
+            <h1>Tempo de Discussão</h1>
+            <p class="msg-discussao">Os jogadores podem agora discutir e votar para descobrir quem é o impostor!</p>
+
+            <button id="btn-finalizar-jogo" class="btn btn-danger btn-grande">
+                Finalizar Jogo
+            </button>
+        </div>
+    </div>
+
+    <!-- Tela 4: Resultado Final -->
+    <div id="tela-resultado" class="tela">
+        <div class="container">
+            <h1>Fim da Partida</h1>
+
+            <div class="resultado-card">
+                <div class="resultado-item">
+                    <p class="resultado-label">O Impostor era:</p>
+                    <p id="resultado-impostor" class="resultado-valor"></p>
+                </div>
+
+                <div class="resultado-item">
+                    <p class="resultado-label">A Palavra era:</p>
+                    <p id="resultado-palavra" class="resultado-valor palavra"></p>
+                </div>
+            </div>
+
+            <button id="btn-nova-rodada" class="btn btn-primary btn-grande">
+                Jogar Outra Rodada
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lista de palavras do jogo
+        const PALAVRAS = [
+            'Batman', 'Superman', 'Homem-Aranha', 'Capitão América',
+            'Médico', 'Piloto', 'Astronauta', 'Chef',
+            'Engenheiro', 'Professor', 'Detetive', 'Bombeiro',
+            'Pizza', 'Hambúrguer', 'Sorvete', 'Chocolate',
+            'Montanha', 'Oceano', 'Floresta', 'Deserto',
+            'Videogame', 'Cinema', 'Música', 'Livro',
+            'Futebol', 'Basquete', 'Natação', 'Corrida',
+            'Gato', 'Cachorro', 'Pássaro', 'Peixe',
+            'Hotel', 'Restaurante', 'Biblioteca', 'Mercado',
+            'Carro', 'Avião', 'Navio', 'Bicicleta'
+        ];
+
+        // Estado do jogo
+        let estadoJogo = {
+            jogadores: [],
+            impostorIndex: null,
+            palavraSecreta: null,
+            jogadorAtualIndex: 0,
+            jogoIniciado: false,
+            funcaoVisualizada: false
+        };
+
+        // Elementos do DOM
+        const telaJogadores = document.getElementById('tela-jogadores');
+        const telaFuncoes = document.getElementById('tela-funcoes');
+        const telaDiscussao = document.getElementById('tela-discussao');
+        const telaResultado = document.getElementById('tela-resultado');
+
+        const inputNomeJogador = document.getElementById('nome-jogador');
+        const btnAdicionar = document.getElementById('btn-adicionar');
+        const listaJogadores = document.getElementById('lista-jogadores');
+        const msgVazia = document.getElementById('msg-vazia');
+        const btnIniciar = document.getElementById('btn-iniciar');
+
+        const nomeAtual = document.getElementById('nome-atual');
+        const numeroJogador = document.getElementById('numero-jogador');
+        const btnVisualizar = document.getElementById('btn-visualizar');
+        const areaFuncao = document.getElementById('area-funcao');
+        const infoResultado = document.getElementById('info-resultado');
+        const funcaoResultado = document.getElementById('funcao-resultado');
+        const palavraResultado = document.getElementById('palavra-resultado');
+        const btnProximo = document.getElementById('btn-proximo');
+
+        const btnFinalizarJogo = document.getElementById('btn-finalizar-jogo');
+        const resultadoImpostor = document.getElementById('resultado-impostor');
+        const resultadoPalavra = document.getElementById('resultado-palavra');
+        const btnNovaRodada = document.getElementById('btn-nova-rodada');
+
+        // Event Listeners
+        btnAdicionar.addEventListener('click', adicionarJogador);
+        inputNomeJogador.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') adicionarJogador();
+        });
+
+        btnIniciar.addEventListener('click', iniciarPartida);
+        btnVisualizar.addEventListener('click', visualizarFuncao);
+        btnProximo.addEventListener('click', proximoJogador);
+        btnFinalizarJogo.addEventListener('click', finalizarJogo);
+        btnNovaRodada.addEventListener('click', voltarParaJogadores);
+
+        // Funções
+        function adicionarJogador() {
+            const nome = inputNomeJogador.value.trim();
+
+            if (!nome) {
+                alert('Digite um nome válido!');
+                inputNomeJogador.focus();
+                return;
+            }
+
+            if (estadoJogo.jogadores.some(j => j.nome.toLowerCase() === nome.toLowerCase())) {
+                alert('Esse jogador já foi adicionado!');
+                inputNomeJogador.value = '';
+                inputNomeJogador.focus();
+                return;
+            }
+
+            estadoJogo.jogadores.push({
+                nome: nome,
+                funcao: null
+            });
+
+            inputNomeJogador.value = '';
+            renderizarJogadores();
+            inputNomeJogador.focus();
+        }
+
+        function renderizarJogadores() {
+            listaJogadores.innerHTML = '';
+
+            if (estadoJogo.jogadores.length === 0) {
+                msgVazia.style.display = 'block';
+                btnIniciar.disabled = true;
+                return;
+            }
+
+            msgVazia.style.display = 'none';
+            btnIniciar.disabled = false;
+
+            estadoJogo.jogadores.forEach((jogador, index) => {
+                const li = document.createElement('li');
+                li.className = 'jogador-item';
+                li.innerHTML = `
+            <span class="jogador-nome">${jogador.nome}</span>
+            <div class="jogador-acoes">
+                ${index > 0 ? `<button class="btn-pequeno btn-mover" onclick="moverJogador(${index}, -1)">↑</button>` : ''}
+                ${index < estadoJogo.jogadores.length - 1 ? `<button class="btn-pequeno btn-mover" onclick="moverJogador(${index}, 1)">↓</button>` : ''}
+                <button class="btn-pequeno btn-deletar" onclick="deletarJogador(${index})">×</button>
+            </div>
+        `;
+                listaJogadores.appendChild(li);
+            });
+        }
+
+        function moverJogador(index, direcao) {
+            const novoIndex = index + direcao;
+
+            if (novoIndex < 0 || novoIndex >= estadoJogo.jogadores.length) {
+                return;
+            }
+
+            const temp = estadoJogo.jogadores[index];
+            estadoJogo.jogadores[index] = estadoJogo.jogadores[novoIndex];
+            estadoJogo.jogadores[novoIndex] = temp;
+
+            renderizarJogadores();
+        }
+
+        function deletarJogador(index) {
+            estadoJogo.jogadores.splice(index, 1);
+            renderizarJogadores();
+        }
+
+        function iniciarPartida() {
+            if (estadoJogo.jogadores.length < 2) {
+                alert('Adicione pelo menos 2 jogadores!');
+                return;
+            }
+
+            // Sortear impostor
+            estadoJogo.impostorIndex = Math.floor(Math.random() * estadoJogo.jogadores.length);
+
+            // Sortear palavra
+            estadoJogo.palavraSecreta = PALAVRAS[Math.floor(Math.random() * PALAVRAS.length)];
+
+            // Inicializar estado
+            estadoJogo.jogoIniciado = true;
+            estadoJogo.jogadorAtualIndex = 0;
+            estadoJogo.funcaoVisualizada = false;
+
+            // Atribuir funções aos jogadores
+            estadoJogo.jogadores.forEach((jogador, index) => {
+                jogador.funcao = index === estadoJogo.impostorIndex ? 'impostor' : 'inocente';
+            });
+
+            // Ir para tela de funções
+            mudarTela('tela-funcoes');
+            atualizarTelaNomeJogador();
+        }
+
+        function atualizarTelaNomeJogador() {
+            const jogadorAtual = estadoJogo.jogadores[estadoJogo.jogadorAtualIndex];
+            nomeAtual.textContent = jogadorAtual.nome;
+            numeroJogador.textContent = `Jogador ${estadoJogo.jogadorAtualIndex + 1} de ${estadoJogo.jogadores.length}`;
+
+            // Resetar visualização
+            estadoJogo.funcaoVisualizada = false;
+            btnVisualizar.style.display = 'block';
+            infoResultado.style.display = 'none';
+            btnProximo.style.display = 'none';
+        }
+
+        function visualizarFuncao() {
+            const jogadorAtual = estadoJogo.jogadores[estadoJogo.jogadorAtualIndex];
+            const ehImpostor = estadoJogo.jogadorAtualIndex === estadoJogo.impostorIndex;
+
+            // Atualizar resultado
+            funcaoResultado.textContent = ehImpostor ? '🕵️ IMPOSTOR 🕵️' : '😇 INOCENTE 😇';
+            funcaoResultado.className = 'funcao-resultado';
+            funcaoResultado.classList.add(ehImpostor ? 'impostor' : 'inocente');
+
+            if (ehImpostor) {
+                palavraResultado.textContent = 'Você não pode ver a palavra!';
+                palavraResultado.className = 'palavra-resultado oculta';
+            } else {
+                palavraResultado.textContent = `Palavra: ${estadoJogo.palavraSecreta}`;
+                palavraResultado.className = 'palavra-resultado';
+            }
+
+            // Mostrar resultado
+            btnVisualizar.style.display = 'none';
+            infoResultado.style.display = 'block';
+            btnProximo.style.display = 'block';
+            estadoJogo.funcaoVisualizada = true;
+        }
+
+        function proximoJogador() {
+            if (estadoJogo.jogadorAtualIndex === estadoJogo.jogadores.length - 1) {
+                // Último jogador passou, ir para tela de discussão
+                mudarTela('tela-discussao');
+            } else {
+                // Próximo jogador
+                estadoJogo.jogadorAtualIndex++;
+                atualizarTelaNomeJogador();
+            }
+        }
+
+        function finalizarJogo() {
+            const impostorNome = estadoJogo.jogadores[estadoJogo.impostorIndex].nome;
+            resultadoImpostor.textContent = impostorNome;
+            resultadoPalavra.textContent = estadoJogo.palavraSecreta;
+
+            mudarTela('tela-resultado');
+        }
+
+        function voltarParaJogadores() {
+            // Resetar estado
+            estadoJogo = {
+                jogadores: estadoJogo.jogadores.map(j => ({ ...j, funcao: null })),
+                impostorIndex: null,
+                palavraSecreta: null,
+                jogadorAtualIndex: 0,
+                jogoIniciado: false,
+                funcaoVisualizada: false
+            };
+
+            mudarTela('tela-jogadores');
+        }
+
+        function mudarTela(nomeTelaAlvo) {
+            // Esconder todas as telas
+            document.querySelectorAll('.tela').forEach(tela => {
+                tela.classList.remove('ativa');
+            });
+
+            // Mostrar tela alvo
+            document.getElementById(nomeTelaAlvo).classList.add('ativa');
+        }
+
+        // Inicializar
+        renderizarJogadores();
+
+    </script>
+</body>
+
+</html>
